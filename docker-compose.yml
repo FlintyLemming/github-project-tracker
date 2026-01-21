@@ -1,0 +1,39 @@
+services:
+  tracker:
+    build: .
+    container_name: github-tracker
+    restart: unless-stopped
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./data:/app/data
+    environment:
+      - TZ=Asia/Shanghai
+      - PYTHONUNBUFFERED=1
+    command: python -m src.main --schedule "0 9 * * *"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  web:
+    build: .
+    container_name: github-tracker-web
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data:ro
+    environment:
+      - TZ=Asia/Shanghai
+    command: streamlit run streamlit_app.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true
+    depends_on:
+      - tracker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  data:

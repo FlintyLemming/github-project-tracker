@@ -1,0 +1,41 @@
+{
+  "github_token": "",
+  "ai": {
+    "api_key": "your-api-key-here",
+    "base_url": "https://api.openai.com/v1",
+    "model": "gpt-4o-mini"
+  },
+  "telegram": {
+    "enabled": false,
+    "bot_token": "",
+    "chat_id": ""
+  },
+  "data_dir": "./data",
+  "reports_dir": "./data/reports",
+  "repos": [
+    {
+      "owner": "kubernetes",
+      "name": "kubernetes",
+      "level": "merged_and_release",
+      "frequency": "1d",
+      "keywords": ["security", "performance", "breaking change"],
+      "enable_tg": true
+    },
+    {
+      "owner": "golang",
+      "name": "go",
+      "level": "release_only",
+      "frequency": "on_release",
+      "keywords": ["generics", "performance"],
+      "enable_tg": false
+    },
+    {
+      "owner": "langchain-ai",
+      "name": "langchain",
+      "level": "all",
+      "frequency": "2d",
+      "keywords": ["agent", "memory", "tools"],
+      "enable_tg": true
+    }
+  ]
+}

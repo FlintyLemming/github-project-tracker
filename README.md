@@ -140,6 +140,8 @@ docker compose up -d
 
 ## 常用命令
 
+以下命令在 `docker-compose.yml` 所在目录执行，无需克隆代码仓库：
+
 ```bash
 # 启动服务
 docker compose up -d
@@ -147,11 +149,11 @@ docker compose up -d
 # 查看日志
 docker compose logs -f tracker
 
-# 手动执行一次追踪
+# 手动执行一次追踪（无需等待定时任务）
 docker compose run --rm tracker python -m src.main --run-once
 
 # 追踪单个仓库
-docker compose run --rm tracker python -m src.main --repo owner/name
+docker compose run --rm tracker python -m src.main --repo kubernetes/kubernetes
 
 # 更新镜像
 docker compose pull && docker compose up -d

@@ -33,7 +33,12 @@ class GitHubAITracker:
     """Main tracker application."""
 
     def __init__(self, config_path: str = "config.json"):
-        self.config = Config.load(config_path)
+        self.config_path = config_path
+        self._load_config()
+
+    def _load_config(self):
+        """Load or reload configuration and reinitialize components."""
+        self.config = Config.load(self.config_path)
         self.db = Database(f"{self.config.data_dir}/tracker.db")
         self.tracker = GitHubTracker(self.config.github_token, self.db, self.config.proxy)
         self.summarizer = AISummarizer(self.config.ai, self.db)
@@ -43,6 +48,15 @@ class GitHubAITracker:
         # Ensure directories exist
         Path(self.config.data_dir).mkdir(parents=True, exist_ok=True)
         Path(self.config.reports_dir).mkdir(parents=True, exist_ok=True)
+
+    def reload_config(self):
+        """Reload configuration from file (hot reload)."""
+        try:
+            logger.info("Reloading configuration...")
+            self._load_config()
+            logger.info("Configuration reloaded successfully")
+        except Exception as e:
+            logger.error(f"Failed to reload configuration: {e}")
 
     def process_repo(self, repo_config: RepoConfig) -> tuple[str, str, bool]:
         """Process a single repository."""
@@ -90,6 +104,9 @@ class GitHubAITracker:
 
     def run_tracking(self):
         """Run tracking for all configured repositories."""
+        # Hot reload configuration before each run
+        self.reload_config()
+
         logger.info("Starting tracking run...")
         start_time = datetime.now()
 

@@ -35,9 +35,9 @@ class GitHubAITracker:
     def __init__(self, config_path: str = "config.json"):
         self.config = Config.load(config_path)
         self.db = Database(f"{self.config.data_dir}/tracker.db")
-        self.tracker = GitHubTracker(self.config.github_token, self.db)
+        self.tracker = GitHubTracker(self.config.github_token, self.db, self.config.proxy)
         self.summarizer = AISummarizer(self.config.ai, self.db)
-        self.notifier = TelegramNotifier(self.config.telegram)
+        self.notifier = TelegramNotifier(self.config.telegram, self.config.proxy)
         self.markdown = MarkdownGenerator(self.config.reports_dir)
 
         # Ensure directories exist

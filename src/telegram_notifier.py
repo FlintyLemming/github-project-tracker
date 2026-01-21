@@ -7,8 +7,9 @@ from typing import Optional
 from telegram import Bot
 from telegram.constants import ParseMode
 from telegram.error import TelegramError
+from telegram.request import HTTPXRequest
 
-from .config import TelegramConfig
+from .config import TelegramConfig, ProxyConfig
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +17,18 @@ logger = logging.getLogger(__name__)
 class TelegramNotifier:
     """Telegram bot for sending update notifications."""
 
-    def __init__(self, config: TelegramConfig):
+    def __init__(self, config: TelegramConfig, proxy: Optional[ProxyConfig] = None):
         self.config = config
         self.bot: Optional[Bot] = None
 
         if config.enabled and config.bot_token:
-            self.bot = Bot(token=config.bot_token)
+            # Configure proxy if enabled
+            if proxy and proxy.enabled and proxy.proxy_url:
+                logger.info(f"Telegram bot using proxy: {proxy.proxy_url}")
+                request = HTTPXRequest(proxy=proxy.proxy_url)
+                self.bot = Bot(token=config.bot_token, request=request)
+            else:
+                self.bot = Bot(token=config.bot_token)
 
     def _truncate_message(self, message: str, max_length: int = 4096) -> str:
         """Truncate message to Telegram's maximum length."""

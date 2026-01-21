@@ -1,6 +1,7 @@
 """GitHub API interaction module."""
 
 import logging
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
@@ -9,7 +10,7 @@ from github import Github, GithubException
 from github.PullRequest import PullRequest
 from github.GitRelease import GitRelease
 
-from .config import RepoConfig
+from .config import RepoConfig, ProxyConfig
 from .database import Database
 
 logger = logging.getLogger(__name__)
@@ -55,7 +56,21 @@ class RepoUpdates:
 class GitHubTracker:
     """GitHub repository tracker."""
 
-    def __init__(self, token: Optional[str] = None, db: Optional[Database] = None):
+    def __init__(
+        self,
+        token: Optional[str] = None,
+        db: Optional[Database] = None,
+        proxy: Optional[ProxyConfig] = None
+    ):
+        # Set proxy environment variables if configured
+        if proxy and proxy.enabled:
+            if proxy.http_proxy:
+                os.environ["HTTP_PROXY"] = proxy.http_proxy
+                logger.info(f"GitHub tracker using HTTP proxy: {proxy.http_proxy}")
+            if proxy.https_proxy:
+                os.environ["HTTPS_PROXY"] = proxy.https_proxy
+                logger.info(f"GitHub tracker using HTTPS proxy: {proxy.https_proxy}")
+
         self.github = Github(token) if token else Github()
         self.db = db or Database()
 

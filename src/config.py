@@ -39,11 +39,39 @@ class TelegramConfig:
 
 
 @dataclass
+class ProxyConfig:
+    """HTTP proxy configuration."""
+    enabled: bool = False
+    http_proxy: str = ""
+    https_proxy: str = ""
+
+    @property
+    def proxies(self) -> Optional[dict]:
+        """Return proxies dict for requests library."""
+        if not self.enabled:
+            return None
+        result = {}
+        if self.http_proxy:
+            result["http"] = self.http_proxy
+        if self.https_proxy:
+            result["https"] = self.https_proxy
+        return result if result else None
+
+    @property
+    def proxy_url(self) -> Optional[str]:
+        """Return single proxy URL (prefer https)."""
+        if not self.enabled:
+            return None
+        return self.https_proxy or self.http_proxy or None
+
+
+@dataclass
 class Config:
     """Main configuration class."""
     github_token: Optional[str]
     ai: AIConfig
     telegram: TelegramConfig
+    proxy: ProxyConfig
     repos: list[RepoConfig]
     data_dir: str = "./data"
     reports_dir: str = "./data/reports"
@@ -74,6 +102,14 @@ class Config:
             enabled=tg_data.get("enabled", False)
         )
 
+        # Parse Proxy config
+        proxy_data = data.get("proxy", {})
+        proxy_config = ProxyConfig(
+            enabled=proxy_data.get("enabled", False),
+            http_proxy=proxy_data.get("http_proxy", os.getenv("HTTP_PROXY", "")),
+            https_proxy=proxy_data.get("https_proxy", os.getenv("HTTPS_PROXY", ""))
+        )
+
         # Parse repos config
         repos = []
         for repo_data in data.get("repos", []):
@@ -90,6 +126,7 @@ class Config:
             github_token=data.get("github_token") or os.getenv("GITHUB_TOKEN"),
             ai=ai_config,
             telegram=telegram_config,
+            proxy=proxy_config,
             repos=repos,
             data_dir=data.get("data_dir", "./data"),
             reports_dir=data.get("reports_dir", "./data/reports")

@@ -10,6 +10,11 @@
     "bot_token": "",
     "chat_id": ""
   },
+  "proxy": {
+    "enabled": false,
+    "http_proxy": "http://127.0.0.1:7890",
+    "https_proxy": "http://127.0.0.1:7890"
+  },
   "data_dir": "./data",
   "reports_dir": "./data/reports",
   "repos": [

@@ -1,6 +1,6 @@
 services:
   tracker:
-    image: ghcr.io/flintylemming/github-project-tracker:latest
+    build: .
     container_name: github-tracker
     restart: unless-stopped
     volumes:
@@ -17,7 +17,7 @@ services:
       retries: 3
 
   web:
-    image: ghcr.io/flintylemming/github-project-tracker:latest
+    build: .
     container_name: github-tracker-web
     restart: unless-stopped
     ports:

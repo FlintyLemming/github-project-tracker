@@ -24,24 +24,14 @@
 
 ## 快速开始
 
-### 1. 克隆项目
+### 1. 创建配置文件
 
 ```bash
-git clone https://github.com/FlintyLemming/github-project-tracker.git
-cd github-project-tracker
-```
+mkdir github-tracker && cd github-tracker
 
-### 2. 创建配置文件
-
-```bash
-cp config.json.example config.json
-```
-
-编辑 `config.json`：
-
-```json
+cat > config.json << 'EOF'
 {
-  "github_token": "ghp_xxxx",
+  "github_token": "",
   "ai": {
     "api_key": "your-api-key",
     "base_url": "https://api.openai.com/v1",
@@ -64,10 +54,43 @@ cp config.json.example config.json
       "level": "merged_and_release",
       "frequency": "1d",
       "keywords": ["security", "performance"],
-      "enable_tg": true
+      "enable_tg": false
     }
   ]
 }
+EOF
+```
+
+### 2. 创建 docker-compose.yml
+
+```bash
+cat > docker-compose.yml << 'EOF'
+services:
+  tracker:
+    image: ghcr.io/flintylemming/github-project-tracker:latest
+    container_name: github-tracker
+    restart: unless-stopped
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./data:/app/data
+    environment:
+      - TZ=Asia/Shanghai
+    command: python -m src.main --schedule "0 9 * * *"
+
+  web:
+    image: ghcr.io/flintylemming/github-project-tracker:latest
+    container_name: github-tracker-web
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data:ro
+    environment:
+      - TZ=Asia/Shanghai
+    command: streamlit run streamlit_app.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true
+    depends_on:
+      - tracker
+EOF
 ```
 
 ### 3. 启动服务
@@ -104,7 +127,7 @@ docker compose up -d
 | `name` | 仓库名称 |
 | `level` | 追踪级别：`all` / `merged_and_release` / `release_only` |
 | `frequency` | 追踪频率：`1d` / `2d` / `on_release` |
-| `keywords` | 关键词列表，AI 总结时重点关注 |
+| `keywords` | 关键词列表，AI 总结时重点关注（可选，不填则关注所有） |
 | `enable_tg` | 是否推送 Telegram |
 
 ### 代理配置
@@ -130,8 +153,8 @@ docker compose run --rm tracker python -m src.main --run-once
 # 追踪单个仓库
 docker compose run --rm tracker python -m src.main --repo owner/name
 
-# 重启服务
-docker compose restart
+# 更新镜像
+docker compose pull && docker compose up -d
 
 # 停止服务
 docker compose down
@@ -145,6 +168,26 @@ data/
 └── reports/        # Markdown 报告
     ├── owner_repo_20260121.md
     └── daily_digest_20260121.md
+```
+
+## 本地开发
+
+如需修改代码或本地构建镜像：
+
+```bash
+# 克隆项目
+git clone https://github.com/FlintyLemming/github-project-tracker.git
+cd github-project-tracker
+
+# 复制配置文件
+cp config.json.example config.json
+# 编辑 config.json ...
+
+# 使用本地构建的镜像启动
+docker compose -f docker-compose.dev.yml up -d --build
+
+# 重新构建
+docker compose -f docker-compose.dev.yml build --no-cache
 ```
 
 ## 技术栈

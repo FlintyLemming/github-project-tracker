@@ -244,14 +244,20 @@ class Database:
 
         last_run = datetime.fromisoformat(state["last_run_time"])
         now = datetime.now()
-        elapsed = now - last_run
+
+        # Compare by calendar date, not elapsed time
+        # This ensures a job scheduled for 9:00 daily runs even if
+        # previous run finished at 9:03 (less than 24 hours ago)
+        last_run_date = last_run.date()
+        today = now.date()
+        days_since_last_run = (today - last_run_date).days
 
         if frequency == "1d":
-            return elapsed.days >= 1
+            return days_since_last_run >= 1
         elif frequency == "2d":
-            return elapsed.days >= 2
+            return days_since_last_run >= 2
         elif frequency == "on_release":
             # For on_release, always check (the actual filtering happens in tracker)
             return True
 
-        return elapsed.days >= 1
+        return days_since_last_run >= 1
